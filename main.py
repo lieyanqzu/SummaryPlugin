@@ -64,6 +64,7 @@ class SummaryPlugin(Plugin):
             else:
                 url = msg_seg[1]
                 docs = None
+                tmp_file_path = './tmp.html'
                 # B站视频使用BiliBiliLoader读取
                 if "www.bilibili.com/video/" in url:
                     loader = BiliBiliLoader([url])
@@ -74,7 +75,7 @@ class SummaryPlugin(Plugin):
                     req = requests.get(url)
                     req.encoding = 'utf-8'
                     html = req.text
-                    with open('./tmp.html', 'w', encoding='utf-8') as tmp_file:
+                    with open(tmp_file_path, 'w', encoding='utf-8') as tmp_file:
                         tmp_file.write(html)
                         loader = UnstructuredHTMLLoader(tmp_file.name)
                     docs = loader.load()
@@ -87,7 +88,8 @@ class SummaryPlugin(Plugin):
                 chain = load_summarize_chain(llm, chain_type="map_reduce", verbose=True, map_prompt=MAP_PROMPT, combine_prompt=COMBINE_PROMPT)
                 reply = chain.run(input_documents=split_docs)
 
-                os.remove('./tmp.html')
+                if os.path.exists(tmp_file_path):
+                    os.remove(tmp_file_path)
                 
             # 输出调试信息
             logging.debug(reply)
